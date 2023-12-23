@@ -15,8 +15,12 @@
     "idf.toolsPathWin": "C:\\Users\\suq\\.espressif",
     "C_Cpp.errorSquiggles": "enabled",
     "files.associations": {
-        "new": "cpp"
+        "new": "cpp",
+        "nvs_flash.h": "c",
+        "freertos.h": "c",
+        "esp_system.h": "c"
     },
     "idf.flashType": "UART",
-    "git.ignoreLimitWarning": true
+    "git.ignoreLimitWarning": true,
+    "cmake.configureOnOpen": true
 }
