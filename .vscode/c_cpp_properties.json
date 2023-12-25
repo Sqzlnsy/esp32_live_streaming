@@ -3,7 +3,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "C:/Users/suq/esp/esp-idf/**"
             ],
             "defines": [
                 "_DEBUG",
