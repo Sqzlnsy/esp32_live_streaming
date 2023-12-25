@@ -20,6 +20,11 @@
         "sockets.h": "c",
         "task.h": "c",
         "protocol_examples_common.h": "c",
-        "spi_common.h": "c"
-    }
+        "spi_common.h": "c",
+        "esp_spiffs.h": "c",
+        "esp_vfs_fat.h": "c",
+        "esp_err.h": "c",
+        "sdkconfig.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }
