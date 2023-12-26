@@ -11,6 +11,8 @@
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include "lwip/api.h"
+#include "lwip/igmp.h"
+#include "lwip/ip_addr.h"
 #include "errno.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -25,6 +27,9 @@
 static const char *TAG = "video_udp";
 
 #define CONFIG_XCLK_FREQ 20000000 
+// Define multicast group and port
+#define MULTICAST_IP "224.0.1.1"
+#define MULTICAST_PORT 55556
 
 esp_err_t init_camera(void)
 {
@@ -68,7 +73,7 @@ esp_err_t init_camera(void)
 #define USE_NETCONN 1
 #if USE_NETCONN
 struct netconn *camera_conn;
-struct ip_addr peer_addr;
+struct ip_addr multicast_addr;
 #else
 static int camera_sock;
 static struct sockaddr_in senderinfo;
@@ -113,7 +118,7 @@ static void video_stream_task(void *param){
             err_t err = netbuf_ref(txbuf, &buf[send], txlen);
             if (err == ERR_OK)
             {
-                err = netconn_sendto(camera_conn, txbuf, &peer_addr, 55556);
+                err = netconn_sendto(camera_conn, txbuf, &multicast_addr, 55556);
                 if (err == ERR_OK)
                 {
                     send += txlen;
@@ -199,33 +204,17 @@ esp_err_t start_stream(void){
         return ESP_FAIL;
     }
 
-    ESP_LOGI(TAG, "Wait a trigger...");
-    while (1)
-    {
-        struct netbuf *rxbuf;
-        err = netconn_recv(camera_conn, &rxbuf);
-        if (err == ERR_OK)
-        {
-            uint8_t *data;
-            u16_t len;
-            netbuf_data(rxbuf, (void **)&data, &len);
-            if (len)
-            {
-                ESP_LOGI(TAG, "netconn_recv %d", len);
-                if (data[0] == 0x55)
-                {
-                    peer_addr = *netbuf_fromaddr(rxbuf);
-                    ESP_LOGI(TAG, "peer %x", (unsigned int) peer_addr.u_addr.ip4.addr);
+    // Additional setup for multicast
+    IP_ADDR4(&multicast_addr, 224,0,1,1); // Set the multicast IP address
 
-                    ESP_LOGI(TAG, "Trigged!");
-                    netbuf_delete(rxbuf);
-                    break;
-                }
-            }
-            netbuf_delete(rxbuf);
-        }
-        vTaskDelay(pdMS_TO_TICKS(10));
+    err = netconn_join_leave_group(camera_conn, &multicast_addr, IPADDR_ANY, NETCONN_JOIN);
+    if (err != ERR_OK) {
+        ESP_LOGE(TAG, "netconn_join_leave_group join err %d", err);
+        netconn_delete(camera_conn);
+        return ESP_FAIL;
     }
+
+    ESP_LOGI(TAG, "Broadcast video on...");
 #else
     camera_sock = socket(AF_INET, SOCK_DGRAM, 0);
     if (camera_sock < 0)

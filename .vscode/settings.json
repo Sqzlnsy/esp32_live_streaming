@@ -27,7 +27,8 @@
         "sdkconfig.h": "c",
         "esp_log.h": "c",
         "api.h": "c",
-        "param.h": "c"
+        "param.h": "c",
+        "random": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
