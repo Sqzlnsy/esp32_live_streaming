@@ -24,7 +24,10 @@
         "esp_spiffs.h": "c",
         "esp_vfs_fat.h": "c",
         "esp_err.h": "c",
-        "sdkconfig.h": "c"
+        "sdkconfig.h": "c",
+        "esp_log.h": "c",
+        "api.h": "c",
+        "param.h": "c"
     },
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "enabled"
 }

@@ -25,6 +25,11 @@ esp_err_t example_mount_storage(const char *base_path);
 
 esp_err_t setup_server(const char *base_path);
 
+esp_err_t init_camera(void);
+
+esp_err_t start_stream(void);
+
+
 #ifdef __cplusplus
 }
 #endif

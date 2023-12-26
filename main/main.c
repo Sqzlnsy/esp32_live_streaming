@@ -2,9 +2,12 @@
 
 #include <esp_system.h>
 #include <nvs_flash.h>
+#include "driver/gpio.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/gpio.h"
+#include "freertos/semphr.h"
+#include "freertos/timers.h"
 
 #include "esp_camera.h"
 #include "camera_pins.h"
@@ -14,45 +17,28 @@
 
 static const char *TAG = "esp32-cam Webserver";
 
-#define CONFIG_XCLK_FREQ 20000000 
+const char* base_path = "/data";
 
-static esp_err_t init_camera(void)
-{
-    camera_config_t camera_config = {
-        .pin_pwdn  = CAMERA_PIN_PWDN,
-        .pin_reset = CAMERA_PIN_RESET,
-        .pin_xclk = CAMERA_PIN_XCLK,
-        .pin_sccb_sda = CAMERA_PIN_SIOD,
-        .pin_sccb_scl = CAMERA_PIN_SIOC,
+// Sensor Data Processing Task
+void sensor_data_processing_task(void *pvParameter) {
+    while (1) {
+        ESP_LOGI(TAG, "Processing sensor data...");
+        // Add sensor data processing logic here
 
-        .pin_d7 = CAMERA_PIN_D7,
-        .pin_d6 = CAMERA_PIN_D6,
-        .pin_d5 = CAMERA_PIN_D5,
-        .pin_d4 = CAMERA_PIN_D4,
-        .pin_d3 = CAMERA_PIN_D3,
-        .pin_d2 = CAMERA_PIN_D2,
-        .pin_d1 = CAMERA_PIN_D1,
-        .pin_d0 = CAMERA_PIN_D0,
-        .pin_vsync = CAMERA_PIN_VSYNC,
-        .pin_href = CAMERA_PIN_HREF,
-        .pin_pclk = CAMERA_PIN_PCLK,
-
-        .xclk_freq_hz = CONFIG_XCLK_FREQ,
-        .ledc_timer = LEDC_TIMER_0,
-        .ledc_channel = LEDC_CHANNEL_0,
-
-        .pixel_format = PIXFORMAT_JPEG,
-        .frame_size = FRAMESIZE_VGA,
-
-        .jpeg_quality = 10,
-        .fb_count = 1,
-        .grab_mode = CAMERA_GRAB_WHEN_EMPTY};//CAMERA_GRAB_LATEST. Sets when buffers should be filled
-    esp_err_t err = esp_camera_init(&camera_config);
-    if (err != ESP_OK)
-    {
-        return err;
+        vTaskDelay(pdMS_TO_TICKS(1000)); // Delay for demonstration
     }
-    return ESP_OK;
+}
+
+// HTTP Server Task
+void http_server_task(void *pvParameter) {
+    setup_server(base_path);
+    ESP_LOGI(TAG, "ESP32 CAM Web Server is up and running\n");
+    while (1) {
+        ESP_LOGI(TAG, "Server running...");
+        // Add video streaming logic here
+
+        vTaskDelay(pdMS_TO_TICKS(10000)); // Delay for demonstration
+    }
 }
 
 void app_main()
@@ -71,7 +57,6 @@ void app_main()
     // ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     /* Initialize file storage */
-    const char* base_path = "/data";
     ESP_ERROR_CHECK(example_mount_storage(base_path));
 
     connect_wifi();
@@ -84,9 +69,21 @@ void app_main()
             printf("err: %s\n", esp_err_to_name(err));
             return;
         }
-        setup_server(base_path);
-        ESP_LOGI(TAG, "ESP32 CAM Web Server is up and running\n");
     }
     else
         ESP_LOGI(TAG, "Failed to connected with Wi-Fi, check your network Credentials\n");
+
+    // Sensor Data Processing Task
+    if (xTaskCreate(sensor_data_processing_task, "sensor_data_processing", 4069, NULL, 10, NULL) != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create sensor data processing task");
+    }
+
+    // HTTP Server Task
+    if (xTaskCreate(http_server_task, "http_server", 4096, NULL, 5, NULL) != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create HTTP server task");
+    }
+
+    if (start_stream() != ESP_OK){
+        return;
+    }
 }
