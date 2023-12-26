@@ -10,7 +10,8 @@
 
 #include "esp_vfs.h"
 #include "esp_spiffs.h"
-#include "esp_http_server.h"
+#include <esp_https_server.h>
+#include "esp_tls.h"
 #include "esp_timer.h"
 #include "esp_camera.h"
 
@@ -439,34 +440,45 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-httpd_handle_t setup_server(const char *base_path)
+static httpd_handle_t setup_server(const char *base_path)
 {
     static struct file_server_data *server_data = NULL;
 
     if (server_data) {
         ESP_LOGE(TAG, "File server already started");
-        return ESP_ERR_INVALID_STATE;
+        return NULL;
     }
 
     /* Allocate memory for server data */
     server_data = calloc(1, sizeof(struct file_server_data));
     if (!server_data) {
         ESP_LOGE(TAG, "Failed to allocate memory for server data");
-        return ESP_ERR_NO_MEM;
+        return NULL;
     }
     strlcpy(server_data->base_path, base_path,
             sizeof(server_data->base_path));
 
     httpd_handle_t server = NULL;
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+    httpd_ssl_config_t config = HTTPD_SSL_CONFIG_DEFAULT();
+
+    extern const unsigned char servercert_start[] asm("_binary_servercert_pem_start");
+    extern const unsigned char servercert_end[]   asm("_binary_servercert_pem_end");
+    config.servercert = servercert_start;
+    config.servercert_len = servercert_end - servercert_start;
+
+    extern const unsigned char prvtkey_pem_start[] asm("_binary_prvtkey_pem_start");
+    extern const unsigned char prvtkey_pem_end[]   asm("_binary_prvtkey_pem_end");
+    config.prvtkey_pem = prvtkey_pem_start;
+    config.prvtkey_len = prvtkey_pem_end - prvtkey_pem_start;
+
 
     /* Use the URI wildcard matching function in order to
      * allow the same handler to respond to multiple different
      * target URIs which match the wildcard scheme */
-    config.uri_match_fn = httpd_uri_match_wildcard;
+    config.httpd.uri_match_fn = httpd_uri_match_wildcard;
 
 
-    if (httpd_start(&server , &config) == ESP_OK)
+    if (httpd_ssl_start(&server , &config) == ESP_OK)
     {
         /* URI handler for getting uploaded files */
         httpd_uri_t file_download = {
@@ -494,7 +506,29 @@ httpd_handle_t setup_server(const char *base_path)
             .user_ctx  = server_data    // Pass server data as context
         };
         httpd_register_uri_handler(server, &file_delete);
+    } else{
+        return NULL;
     }
 
-    return ESP_OK;
+    return server;
+}
+
+esp_err_t stop_server(httpd_handle_t server)
+{
+    // Stop the httpd server
+    return httpd_ssl_stop(server);
+}
+
+// HTTP Server Task
+void https_server_task(void *pvParameters) {
+    const char* base_path = (const char*) pvParameters;
+    httpd_handle_t server = setup_server(base_path);
+    ESP_LOGI(TAG, "ESP32 CAM Web Server is up and running\n");
+    while (1) {
+        ESP_LOGI(TAG, "Server running...");
+        // Add video streaming logic here
+
+        vTaskDelay(pdMS_TO_TICKS(10000)); // Delay for demonstration
+    }
+    stop_server(server);
 }

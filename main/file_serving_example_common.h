@@ -23,7 +23,7 @@ extern "C" {
 
 esp_err_t example_mount_storage(const char *base_path);
 
-esp_err_t setup_server(const char *base_path);
+void https_server_task(void *pvParameters);
 
 esp_err_t init_camera(void);
 

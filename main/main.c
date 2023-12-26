@@ -29,18 +29,6 @@ void sensor_data_processing_task(void *pvParameter) {
     }
 }
 
-// HTTP Server Task
-void http_server_task(void *pvParameter) {
-    setup_server(base_path);
-    ESP_LOGI(TAG, "ESP32 CAM Web Server is up and running\n");
-    while (1) {
-        ESP_LOGI(TAG, "Server running...");
-        // Add video streaming logic here
-
-        vTaskDelay(pdMS_TO_TICKS(10000)); // Delay for demonstration
-    }
-}
-
 void app_main()
 {
     esp_err_t err;
@@ -79,8 +67,8 @@ void app_main()
     }
 
     // HTTP Server Task
-    if (xTaskCreate(http_server_task, "http_server", 4096, NULL, 5, NULL) != pdPASS) {
-        ESP_LOGE(TAG, "Failed to create HTTP server task");
+    if (xTaskCreate(https_server_task, "https_server", 4096, (void*) base_path, 5, NULL) != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create HTTPS server task");
     }
 
     if (start_stream() != ESP_OK){
