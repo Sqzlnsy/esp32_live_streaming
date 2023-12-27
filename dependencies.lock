@@ -1,4 +1,10 @@
 dependencies:
+  espressif/asio:
+    component_hash: a232b8bbf8c887ee6bc39c079587a2fca5f135acacafda232542c16ee23513c1
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 1.28.2
   espressif/esp32-camera:
     component_hash: b8ac31f1c94f5f051f4a19b7c7ccdb1ee53fcb63f13b340c496ba178bdd6305a
     source:
@@ -16,6 +22,6 @@ dependencies:
       path: C:\Users\suq\esp\esp-idf\examples\common_components\protocol_examples_common
       type: local
     version: '*'
-manifest_hash: c7ee946322a5611b5af353dbcd6510b7c314ee0483ec9b44a6a9d667ab8a79e1
+manifest_hash: e8ac95f0dab4e17f0dd970af3977c0fffe83f39f1b74ac8316f26e4e2dc1d523
 target: esp32s3
 version: 1.0.0

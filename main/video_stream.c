@@ -60,13 +60,24 @@ esp_err_t init_camera(void)
         .frame_size = FRAMESIZE_VGA,
 
         .jpeg_quality = 10,
-        .fb_count = 1,
+        .fb_count = 2,
         .grab_mode = CAMERA_GRAB_WHEN_EMPTY};//CAMERA_GRAB_LATEST. Sets when buffers should be filled
     esp_err_t err = esp_camera_init(&camera_config);
     if (err != ESP_OK)
     {
         return err;
     }
+
+     sensor_t *s = esp_camera_sensor_get();
+
+    // drop down frame size for higher initial frame rate
+    // s->set_framesize(s, FRAMESIZE_CIF);
+    // s->set_framesize(s, FRAMESIZE_QVGA);
+    s->set_framesize(s, FRAMESIZE_VGA);
+    // s->set_framesize(s, FRAMESIZE_XGA);
+    // s->set_framesize(s, FRAMESIZE_HD);
+    // s->set_framesize(s, FRAMESIZE_SXGA);
+
     return ESP_OK;
 }
 
@@ -79,7 +90,7 @@ static int camera_sock;
 static struct sockaddr_in senderinfo;
 #endif
 
-static void video_stream_task(void *param){
+void video_stream_task(void *param){
     size_t packet_max = 32768;
     #if USE_NETCONN
         struct netbuf *txbuf = netbuf_new();
@@ -242,12 +253,5 @@ esp_err_t start_stream(void){
         ESP_LOGI(TAG, "recvfrom %d", n);
     }
 #endif
-    
-    if (xTaskCreatePinnedToCore(&video_stream_task, "camera_tx", 4096, NULL, 10, NULL, tskNO_AFFINITY) != pdPASS){
-        ESP_LOGE(TAG, "Failed to create video stream task");
-        return ESP_FAIL;
-    } else{
-        return ESP_OK;
-    }
-   
+    return ESP_OK;
 }

@@ -65,13 +65,24 @@ void app_main()
     if (xTaskCreate(sensor_data_processing_task, "sensor_data_processing", 4069, NULL, 10, NULL) != pdPASS) {
         ESP_LOGE(TAG, "Failed to create sensor data processing task");
     }
+    vTaskDelay(pdMS_TO_TICKS(100));
 
     // HTTP Server Task
     if (xTaskCreate(https_server_task, "https_server", 4096, (void*) base_path, 5, NULL) != pdPASS) {
         ESP_LOGE(TAG, "Failed to create HTTPS server task");
     }
+     vTaskDelay(pdMS_TO_TICKS(100));
 
-    if (start_stream() != ESP_OK){
-        return;
+    // Data Link Task
+    if (xTaskCreate(data_link_task, "data_link", 4096, NULL, 15, NULL) != pdPASS) {
+        ESP_LOGE(TAG, "Failed to create Async TCP task");
+    }
+     vTaskDelay(pdMS_TO_TICKS(100));
+
+    if (start_stream() == ESP_OK){
+        vTaskDelay(pdMS_TO_TICKS(100));
+        if (xTaskCreatePinnedToCore(&video_stream_task, "camera_tx", 4096, NULL, 15, NULL, tskNO_AFFINITY) != pdPASS){
+            ESP_LOGE(TAG, "Failed to create video stream task");
+        } 
     }
 }

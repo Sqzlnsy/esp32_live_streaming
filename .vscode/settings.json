@@ -31,7 +31,8 @@
         "random": "c",
         "esp_https_server.h": "c",
         "esp_http_server.h": "c",
-        "esp_tls.h": "c"
+        "esp_tls.h": "c",
+        "*.ipp": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

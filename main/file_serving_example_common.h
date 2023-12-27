@@ -29,6 +29,9 @@ esp_err_t init_camera(void);
 
 esp_err_t start_stream(void);
 
+void video_stream_task(void *param);
+
+void data_link_task(void *pvParameters);
 
 #ifdef __cplusplus
 }

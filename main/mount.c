@@ -36,16 +36,6 @@
 #define CONFIG_EXAMPLE_PIN_CLK 39
 #define SOC_SDMMC_USE_GPIO_MATRIX 1
 
-//
-// SD card pin configuration (SDMMC)
-//
-#define CONFIG_EXAMPLE_PIN_CMD 38
-#define CONFIG_EXAMPLE_PIN_D0 40
-#define CONFIG_EXAMPLE_PIN_D1 38
-#define CONFIG_EXAMPLE_PIN_D2 33
-#define CONFIG_EXAMPLE_PIN_D3 34
-// end of SD card pin configuration (SDMMC)
-
 static const char *TAG = "example_mount";
 
 #ifdef CONFIG_EXAMPLE_MOUNT_SD_CARD
