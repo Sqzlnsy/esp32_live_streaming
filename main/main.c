@@ -20,7 +20,7 @@ static const char *TAG = "esp32-cam Webserver";
 const char* base_path = "/data";
 
 // Sensor Data Processing Task
-void sensor_data_processing_task(void *pvParameter) {
+static void sensor_data_processing_task(void *pvParameter) {
     while (1) {
         ESP_LOGI(TAG, "Processing sensor data...");
         // Add sensor data processing logic here
@@ -41,6 +41,8 @@ void app_main()
         ret = nvs_flash_init();
     }
 
+    monitor_CPU();
+
     // ESP_ERROR_CHECK(esp_netif_init());
     // ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -51,7 +53,7 @@ void app_main()
 
     if (wifi_connect_status)
     {
-        err = init_camera();
+        err = start_stream();
         if (err != ESP_OK)
         {
             printf("err: %s\n", esp_err_to_name(err));
@@ -74,15 +76,12 @@ void app_main()
      vTaskDelay(pdMS_TO_TICKS(100));
 
     // Data Link Task
-    if (xTaskCreate(data_link_task, "data_link", 4096, NULL, 15, NULL) != pdPASS) {
+    if (xTaskCreate(data_link_task, "data_link", 10240, NULL, 12, NULL) != pdPASS) {
         ESP_LOGE(TAG, "Failed to create Async TCP task");
     }
      vTaskDelay(pdMS_TO_TICKS(100));
 
-    if (start_stream() == ESP_OK){
-        vTaskDelay(pdMS_TO_TICKS(100));
-        if (xTaskCreatePinnedToCore(&video_stream_task, "camera_tx", 4096, NULL, 15, NULL, tskNO_AFFINITY) != pdPASS){
-            ESP_LOGE(TAG, "Failed to create video stream task");
-        } 
-    }
+    if (xTaskCreatePinnedToCore(&video_stream_task, "camera_tx", 10240, NULL, 15, NULL, tskNO_AFFINITY) != pdPASS){
+        ESP_LOGE(TAG, "Failed to create video stream task");
+    } 
 }

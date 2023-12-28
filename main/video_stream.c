@@ -31,7 +31,7 @@ static const char *TAG = "video_udp";
 #define MULTICAST_IP "224.0.1.1"
 #define MULTICAST_PORT 55556
 
-esp_err_t init_camera(void)
+static esp_err_t init_camera(void)
 {
     camera_config_t camera_config = {
         .pin_pwdn  = CAMERA_PIN_PWDN,
@@ -184,7 +184,7 @@ void video_stream_task(void *param){
 
         int64_t end = esp_timer_get_time();
         int64_t pasttime = end - last_frame;
-        if (pasttime > 1000000)
+        if (pasttime > 5000000)
         {
             last_frame = end;
             float adj = 1000000.0 / (float)pasttime;
@@ -194,11 +194,12 @@ void video_stream_task(void *param){
             frame_size_sum = 0;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(1));
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
 }
 
 esp_err_t start_stream(void){
+    init_camera();
 #if USE_NETCONN
     camera_conn = netconn_new(NETCONN_UDP);
     if (camera_conn == NULL)

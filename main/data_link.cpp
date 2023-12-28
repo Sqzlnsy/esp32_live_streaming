@@ -21,6 +21,7 @@ public:
 
     void start()
     {
+        std::cout << "Session created Successfully" << std::endl;
         do_read();
     }
 
@@ -32,7 +33,10 @@ private:
         [this, self](std::error_code ec, std::size_t length) {
             if (!ec) {
                 data_[length] = 0;
-                std::cout << data_ << std::endl;
+                // std::cout << data_ << std::endl;
+                // if (length != 1024) {
+                //     std::cout << "Mismatch " << length << std::endl;
+                // }
                 do_write(length);
             }
         });
@@ -50,7 +54,7 @@ private:
     }
 
     tcp::socket socket_;
-    enum { max_length = 1024 };
+    enum { max_length = 10240 };
     char data_[max_length];
 };
 

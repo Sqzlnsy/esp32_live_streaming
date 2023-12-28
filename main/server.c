@@ -513,7 +513,7 @@ static httpd_handle_t setup_server(const char *base_path)
     return server;
 }
 
-esp_err_t stop_server(httpd_handle_t server)
+static esp_err_t stop_server(httpd_handle_t server)
 {
     // Stop the httpd server
     return httpd_ssl_stop(server);

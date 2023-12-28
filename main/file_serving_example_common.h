@@ -25,13 +25,13 @@ esp_err_t example_mount_storage(const char *base_path);
 
 void https_server_task(void *pvParameters);
 
-esp_err_t init_camera(void);
-
 esp_err_t start_stream(void);
 
 void video_stream_task(void *param);
 
 void data_link_task(void *pvParameters);
+
+void monitor_CPU(void);
 
 #ifdef __cplusplus
 }
