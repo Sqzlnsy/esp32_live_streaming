@@ -98,7 +98,10 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "thread": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "semaphore.h": "c",
+        "mutex.h": "c",
+        "semphr.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
