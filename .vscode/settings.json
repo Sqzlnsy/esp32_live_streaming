@@ -101,7 +101,10 @@
         "typeinfo": "cpp",
         "semaphore.h": "c",
         "mutex.h": "c",
-        "semphr.h": "c"
+        "semphr.h": "c",
+        "stdlib.h": "c",
+        "stdatomic.h": "c",
+        "stdbool.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }

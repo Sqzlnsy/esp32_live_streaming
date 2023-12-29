@@ -1,7 +1,13 @@
-#ifndef INT_RING_BUFFER_H
-#define INT_RING_BUFFER_H
+#ifndef CHAR_RING_BUFFER_H
+#define CHAR_RING_BUFFER_H
 
+#ifdef __cplusplus
+extern "C" {
+#include <atomic>
+}
+#else
 #include <stdatomic.h>
+#endif
 #include <stdbool.h>
 #include <stdlib.h>
 #include "freertos/FreeRTOS.h"
@@ -9,25 +15,29 @@
 
 // Structure for the ring buffer
 typedef struct {
-    int *buffer;
+    char *buffer;
     size_t capacity;
-
-    // Shared state positions
+    
+#ifdef __cplusplus
+    std::atomic<size_t> writePos;
+    std::atomic<size_t> readPos;
+#else
     _Atomic size_t writePos;
     _Atomic size_t readPos;
+#endif
 
     // Local state positions (not shared between threads)
     size_t localWritePos;
     size_t localReadPos;
 
     SemaphoreHandle_t dataAvailableSemaphore;
-} IntRingBuffer;
+} RingBuffer;
 
 // Function declarations
-IntRingBuffer *createRingBuffer(size_t capacity);
-void deleteRingBuffer(IntRingBuffer *rb);
-bool writeToBuffer(IntRingBuffer *rb, int *data, size_t len);
-bool readFromBuffer(IntRingBuffer *rb, int *data, size_t len);
-void waitForData(IntRingBuffer *rb, size_t len);
+RingBuffer *createRingBuffer(size_t capacity);
+void deleteRingBuffer(RingBuffer *rb);
+bool writeToBuffer(RingBuffer *rb, char *data, size_t len);
+bool readFromBuffer(RingBuffer *rb, char *data, size_t len);
+void waitForData(RingBuffer *rb, size_t len);
 
-#endif // INT_RING_BUFFER_H
+#endif // CHAR_RING_BUFFER_H

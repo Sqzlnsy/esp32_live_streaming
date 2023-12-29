@@ -6,6 +6,9 @@
 #include "asio.hpp"
 #include <string>
 #include <iostream>
+extern "C" {
+#include "spsc_rb.h"
+}
 
 #define CONFIG_EXAMPLE_PORT "2022"
 
@@ -14,8 +17,8 @@ using asio::ip::tcp;
 class session
     : public std::enable_shared_from_this<session> {
 public:
-    session(tcp::socket socket)
-        : socket_(std::move(socket))
+    session(tcp::socket socket, RingBuffer *ringBuffer)
+        : socket_(std::move(socket)), ringBuffer_(ringBuffer)
     {
     }
 
@@ -33,10 +36,7 @@ private:
         [this, self](std::error_code ec, std::size_t length) {
             if (!ec) {
                 data_[length] = 0;
-                // std::cout << data_ << std::endl;
-                // if (length != 1024) {
-                //     std::cout << "Mismatch " << length << std::endl;
-                // }
+                writeToBuffer(ringBuffer_, data_, length); // Write to ring buffer
                 do_write(length);
             }
         });
@@ -54,14 +54,15 @@ private:
     }
 
     tcp::socket socket_;
+    RingBuffer *ringBuffer_;
     enum { max_length = 10240 };
     char data_[max_length];
 };
 
 class server {
 public:
-    server(asio::io_context &io_context, short port)
-        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port))
+    server(asio::io_context &io_context, short port, RingBuffer *ringBuffer)
+        : acceptor_(io_context, tcp::endpoint(tcp::v4(), port)), ringBuffer_(ringBuffer)
     {
         do_accept();
     }
@@ -72,7 +73,7 @@ private:
         acceptor_.async_accept(
         [this](std::error_code ec, tcp::socket socket) {
             if (!ec) {
-                std::make_shared<session>(std::move(socket))->start();
+                std::make_shared<session>(std::move(socket), ringBuffer_)->start();
             }
 
             do_accept();
@@ -80,14 +81,17 @@ private:
     }
 
     tcp::acceptor acceptor_;
+    RingBuffer *ringBuffer_; 
 };
 
 
-extern "C" void data_link_task(void)
+extern "C" void data_link_task(void *pvParameters)
 {
+    RingBuffer *ringBuffer = (RingBuffer *)pvParameters;
+
     asio::io_context io_context;
 
-    server s(io_context, std::atoi(CONFIG_EXAMPLE_PORT));
+    server s(io_context, std::atoi(CONFIG_EXAMPLE_PORT), ringBuffer);
 
     std::cout << "ASIO engine is up and running" << std::endl;
 
